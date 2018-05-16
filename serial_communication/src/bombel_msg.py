@@ -1,0 +1,15 @@
+class bombel_msg:
+	ORDER_LENGTH =		11
+	
+	HW_CONFIG =			1
+	JOINT_SPACE =		2
+	OPERATION_SPACE =	3
+
+	MOTORS_ON =			1
+	MOTORS_OFF =		2
+	FANS_ON =			3
+	FANS_OFF =			4
+
+	ORDER_OK =			0
+	ORDER_ERROR =		1
+
