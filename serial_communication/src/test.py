@@ -73,6 +73,8 @@ def disp_menu(option):
         print('Invalid option')
 
 def joint_space_cmd():
+    dir_flag=0;
+
     f0=float(raw_input('JOINT 0 :'))
     f1=float(raw_input('JOINT 1 :'))
     f2=float(raw_input('JOINT 2 :'))
@@ -80,6 +82,17 @@ def joint_space_cmd():
     if f0 >= 10 or f1 >=10 or f2 >= 10:
         print("F0 or F1 or F2: Out of range")
         return
+
+    if f0 < 0 :
+        dir_flag=1;
+        f0=-f0
+    if f1 < 0 :
+        dir_flag=dir_flag+2;
+        f1=-f1
+    if f2 < 0 :
+        dir_flag=dir_flag+4;
+        f2=-f2
+
 
     str0="%1.2f" % f0
     str1="%1.2f" % f1
@@ -90,6 +103,7 @@ def joint_space_cmd():
     serial_send(10*int(str1[0])+int(str1[2]))
     serial_send(10*int(str1[3])+int(str2[0]))
     serial_send(10*int(str2[2])+int(str2[3]))
+    serial_send(dir_flag)
 
 def hw_config_cmd():
     option=int(raw_input('Choose option: '))
@@ -108,6 +122,7 @@ def hw_config_cmd():
     serial_send(00)
     serial_send(00)
     serial_send(00)
+    serial_send(00)
 
 def serial_init():
     global ser
@@ -118,7 +133,7 @@ def serial_init():
     #    3. x, x is bigger than 0, float allowed, timeout block call
 
     ser = serial.Serial()
-    ser.port = "/dev/ttyACM1"
+    ser.port = "/dev/ttyACM0"
     ser.baudrate = 115200
     ser.bytesize = serial.EIGHTBITS #number of bits per bytes
     ser.parity = serial.PARITY_NONE #set parity check: no parity
