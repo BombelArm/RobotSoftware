@@ -91,9 +91,12 @@ def disp_menu(option):
 
 def joint_space_cmd():
 	dir_flag=0;
+	f1=0
+	f2=0
+	f3=0
 
 	try:
-		f1=float(raw_input('JOINT 0 :'));
+		f0=float(raw_input('JOINT 0 :'));
 		f1=float(raw_input('JOINT 1 :'))
 		f2=float(raw_input('JOINT 2 :'))
 	except ValueError:
