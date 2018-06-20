@@ -1,0 +1,45 @@
+
+<robot name="myrobot">
+
+ 	<link name="base_link">
+		<visual>
+		    <origin xyz="0 0 0.05" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="package://zortax_robotic_arm/meshes/part1.dae"/>
+			</geometry>
+		</visual>	
+	</link>
+	
+	<joint name="base_to_part1" type="continuous">
+    		<parent link="base_link"/>
+    		<child link="part2"/>
+		<axis xyz="0 1 0"/>
+		<origin xyz="0 0 100"/>  	
+</joint>
+
+ 	<link name="part2">
+		<visual>
+		    <origin xyz="0 0 0.05" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="package://zortax_robotic_arm/meshes/part2.dae"/>
+			</geometry>
+		</visual>	
+	</link>
+
+	<joint name="part2_to_part3" type="continuous">
+    		<parent link="part2"/>
+    		<child link="part3"/>
+		<axis xyz="0 1 0"/>
+  	</joint>
+
+ 	<link name="part3">
+		<visual>
+		    <origin xyz="0 0 0.05" rpy="0 0 0"/>
+			<geometry>
+				<mesh filename="package://zortax_robotic_arm/meshes/part3.dae"/>
+			</geometry>
+		</visual>	
+	</link>
+</robot>
+
+
