@@ -52,11 +52,11 @@ def calc_ikin(req):
 
 	cos3=(x*x+y*y+(z-d1)*(z-d1)-a2*a2-k*k)/(2*a2*k)
 	sin3=sqrt(1-pow(cos3,2))
-	theta3=atan2(sin3,cos3)
+	theta3_prim=atan2(sin3,cos3)
 
 	theta1=atan2(y,x)
-	theta2=atan2(x,z-d1)-atan2(k*sin(theta3),a2+k*cos(theta3))
-	theta3=theta3-beta
+	theta2=atan2(sqrt(x*x+y*y),z-d1)-atan2(k*sin(theta3_prim),a2+k*cos(theta3_prim))
+	theta3=theta3_prim-beta
 
 	# if theta1>theta1_upper or theta1<theta1_lower :
 	# 	return pointResponse("Theta1 violation"+str(theta1))

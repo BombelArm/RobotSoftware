@@ -1,2 +1,0 @@
-
--DCATKIN_DEVEL_PREFIX=/home/mromanow/Dokumenty/RobotSoftware/devel -DCMAKE_INSTALL_PREFIX=/home/mromanow/Dokumenty/RobotSoftware/install -G Unix Makefiles
