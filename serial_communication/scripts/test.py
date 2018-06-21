@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 # license removed for brevity
 import rospy
+import threading
 import serial
 import struct
 import time
 from bombel_msg import bombel_msg
-from std_msgs.msg import String
 
-global ser
+from std_msgs.msg import String
+from sensor_msgs.msg import JointState
+
+ser=0
+jState=0
+pub=0
 
 class bcolors:
     HEADER = '\033[95m'
@@ -30,6 +35,8 @@ def shutdown(reason):
 
 
 def serial_send(msg):
+	global ser 
+
 	line = []
 	if msg > 99:
 		print "Msg is defined as 8bit (int<256)"
@@ -38,14 +45,8 @@ def serial_send(msg):
 
 		try:
 			ser.flushInput() #flush input buffer, discarding all its contents
-			ser.flushOutput()#flush output buffer, aborting current output 
 
 			bytes_sent = ser.write(struct.pack('!B',msg))
-
-			# time.sleep(0.1)  #give the serial port sometime to receive the data
-			# response = ser.readline().decode('ascii')
-			# # response = ser.readline()
-			# print("read data: " + response)
 
 		except Exception, e1:
 			print "error communicating...: " + str(e1)
@@ -147,6 +148,44 @@ def hw_config_cmd():
 	serial_send(00)
 	serial_send(00)
 
+def read():
+	global ser, jState, pub
+
+	while not rospy.is_shutdown():
+		# ser.flushOutput()#flush output buffer, aborting current output 		
+		
+
+		try:
+			
+			line = ser.readline().decode("ascii")
+			# line = ser.readline()
+			print line
+
+			# f0= float(line[0:4])
+			# f1= float(line[5:9])
+			# f2= float(line[10:14])
+			# sign_flag=int(line[15:16])
+
+			# if sign_flag & 1 :
+			# 	f0=-f0
+			# if sign_flag>>1 & 1 :
+			# 	f1=-f1
+			# if sign_flag>>2 & 2 :
+			# 	f2=-f2
+			
+
+			# jState.position[0]=f0
+			# jState.position[1]=f1
+			# jState.position[2]=f2
+
+			# jState.header.stamp=rospy.Time.now()
+			# pub.publish(jState)
+			
+		except Exception, e:
+			pass
+			print "read_exception" + str(e)
+
+
 def serial_init():
 	global ser
 
@@ -175,12 +214,25 @@ def serial_init():
 		print "Opening serial port error: " + str(e)
 		rospy.signal_shutdown('Keyboard interrupt')
 		rospy.on_shutdown(on_shutdown)
+
 if __name__ == '__main__':
+	# global jState, pub
+
 	try:
 		rospy.init_node('test', anonymous=True)  
 		serial_init()
 
+		pub = rospy.Publisher('/joint_states', JointState, queue_size=10)
+		jState=JointState()
+		jState.name=["joint0","joint1", "joint2"]
+		jState.position=[0.0, 0.0, 0.0]
+
 		rate = rospy.Rate(10) # 10hz 
+
+
+		thread = threading.Thread(target=read)
+		thread.start()
+
 		loop()
 	except rospy.ROSInterruptException:
 		pass

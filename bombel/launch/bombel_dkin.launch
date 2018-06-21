@@ -9,10 +9,10 @@
   <param name="a4" value="0.14616" />
   <param name="theta4" value="0.78539816339" />
 
-  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+  <!--<node name="ROBOT_STATE_RECEIVER" pkg="serial_communication" type="test.py" output="screen"/> -->
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
 
-  <!--<node name="DKIN" pkg="bombel" type="dkin.py" output="screen"/>	-->
+  <node name="DKIN" pkg="bombel" type="dkin.py"/>	
   
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
 
