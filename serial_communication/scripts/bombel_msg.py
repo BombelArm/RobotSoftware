@@ -10,6 +10,8 @@ class bombel_msg:
 	FANS_ON =			3
 	FANS_OFF =			4
 
-	ORDER_OK =			0
-	ORDER_ERROR =		1
+	HW_ERROR =			1
+	ORDER_ERROR=		2
+	ROBOT_STATE = 		3
+
 

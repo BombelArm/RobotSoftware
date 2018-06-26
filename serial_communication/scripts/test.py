@@ -153,21 +153,32 @@ def hw_config_cmd():
 def read():
 	global ser, jState, pub
 
+	order_type=-1
+
 	while not rospy.is_shutdown():
 		try:
 			line = ser.readline().decode("ascii").split()
 
-			f0=bin2rad(int(line[0]))
-			f1=bin2rad(int(line[1]))
-			f2=bin2rad(int(line[2]))
+			order_type=int(line[0])
 
-			# print "%1.2f" % f0 +" "+"%1.2f" % f1+" "+"%1.2f" % f2
-			jState.position[0]=f0
-			jState.position[1]=f1
-			jState.position[2]=f2
+			if order_type == bombel_msg.ROBOT_STATE :
+			
+				f0=bin2rad(int(line[1]))
+				f1=bin2rad(int(line[2]))
+				f2=bin2rad(int(line[3]))
 
-			jState.header.stamp=rospy.Time.now()
-			pub.publish(jState)
+				# print "%1.2f" % f0 +" "+"%1.2f" % f1+" "+"%1.2f" % f2
+				jState.position[0]=f0
+				jState.position[1]=f1
+				jState.position[2]=f2
+
+				jState.header.stamp=rospy.Time.now()
+				pub.publish(jState)
+
+			elif  order_type == bombel_msg.ORDER_ERROR :
+				print "Order error"
+
+
 
 		except Exception, e:
 			print "read_exception " + str(e)
@@ -212,7 +223,6 @@ if __name__ == '__main__':
 		rospy.init_node('test', anonymous=True)  
 
 		serial_init()
-		ser.flushInput()
 
 		pub = rospy.Publisher('/joint_states', JointState, queue_size=10)
 		
@@ -223,6 +233,7 @@ if __name__ == '__main__':
 		rate = rospy.Rate(10) # 10hz 
 
 		thread = threading.Thread(target=read)
+		ser.flushInput()
 		thread.start()
 
 		loop()
