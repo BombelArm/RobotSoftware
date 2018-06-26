@@ -9,10 +9,11 @@ from bombel_msg import bombel_msg
 
 from std_msgs.msg import String
 from sensor_msgs.msg import JointState
-
+from math import *
 ser=0
 jState=0
 pub=0
+thread=0 
 
 class bcolors:
     HEADER = '\033[95m'
@@ -38,14 +39,14 @@ def serial_send(msg):
 	global ser 
 
 	line = []
-	if msg > 99:
+	if msg > 255:
 		print "Msg is defined as 8bit (int<256)"
 		return
 	if ser.isOpen():
 
 		try:
-			ser.flushInput() #flush input buffer, discarding all its contents
-
+			# ser.flushInput() #flush input buffer, discarding all its contents
+			# print "Sending"+str(msg)
 			bytes_sent = ser.write(struct.pack('!B',msg))
 
 		except Exception, e1:
@@ -64,7 +65,7 @@ def loop():
 		else:
 			if option == 1:
 				disp_menu(1)			
-				hw_config_cmd()   
+				hw_config_cmd()
 			elif option == 2:
 				disp_menu(2)
 				joint_space_cmd()
@@ -97,37 +98,38 @@ def joint_space_cmd():
 	f3=0
 
 	try:
-		f0=float(raw_input('JOINT 0 :'));
+		f0=float(raw_input('JOINT 0 :'))
 		f1=float(raw_input('JOINT 1 :'))
 		f2=float(raw_input('JOINT 2 :'))
+
+		f0=int(f0*2048/pi)
+		f1=int(f1*2048/pi)
+		f2=int(f2*2048/pi)
+
 	except ValueError:
 		print(bcolors.FAIL+'Incorrect input data type'+bcolors.ENDC)
 	else:
-		if f0 >= 10 or f1 >=10 or f2 >= 10:
+		if abs(f0) >= pow(2,12)-1 or abs(f1) >= pow(2,12)-1 or abs(f2) >= pow(2,12)-1:
 			print("F0 or F1 or F2: Out of range")
 			return
 
 		if f0 < 0 :
-			dir_flag=1;
+			dir_flag+=1;
 			f0=-f0
 		if f1 < 0 :
-			dir_flag=dir_flag+2;
+			dir_flag+=2;
 			f1=-f1
 		if f2 < 0 :
-			dir_flag=dir_flag+4;
+			dir_flag+=4;
 			f2=-f2
 
+		serial_send((dir_flag<<3) + bombel_msg.JOINT_SPACE)
+		serial_send((f0 >> 4))
+		serial_send(((f0 & 0x00F)<<4) + (f1>>8))
+		serial_send((f1 & 0x0FF))
+		serial_send((f2 >> 4))
+		serial_send((f2 & 0x00F))
 
-		str0="%1.2f" % f0
-		str1="%1.2f" % f1
-		str2="%1.2f" % f2
-
-		serial_send(10*bombel_msg.JOINT_SPACE+int(str0[0]))
-		serial_send(10*int(str0[2])+int(str0[3]))
-		serial_send(10*int(str1[0])+int(str1[2]))
-		serial_send(10*int(str1[3])+int(str2[0]))
-		serial_send(10*int(str2[2])+int(str2[3]))
-		serial_send(dir_flag)
 
 def hw_config_cmd():
 	option=int(raw_input('Choose option: '))
@@ -141,49 +143,34 @@ def hw_config_cmd():
 	elif option == bombel_msg.FANS_OFF:
 		action = bombel_msg.FANS_OFF;
 
-	serial_send(10*bombel_msg.HW_CONFIG);
-	serial_send(10*(action%10))
-	serial_send(00)
-	serial_send(00)
-	serial_send(00)
-	serial_send(00)
+	serial_send(bombel_msg.HW_CONFIG)
+	serial_send(action)
+	serial_send(0)
+	serial_send(0)
+	serial_send(0)
+	serial_send(0)
 
 def read():
 	global ser, jState, pub
 
 	while not rospy.is_shutdown():
-		# ser.flushOutput()#flush output buffer, aborting current output 		
-		
-
 		try:
-			
-			line = ser.readline().decode("ascii")
-			# line = ser.readline()
-			print line
+			line = ser.readline().decode("ascii").split()
 
-			# f0= float(line[0:4])
-			# f1= float(line[5:9])
-			# f2= float(line[10:14])
-			# sign_flag=int(line[15:16])
+			f0=bin2rad(int(line[0]))
+			f1=bin2rad(int(line[1]))
+			f2=bin2rad(int(line[2]))
 
-			# if sign_flag & 1 :
-			# 	f0=-f0
-			# if sign_flag>>1 & 1 :
-			# 	f1=-f1
-			# if sign_flag>>2 & 2 :
-			# 	f2=-f2
-			
+			# print "%1.2f" % f0 +" "+"%1.2f" % f1+" "+"%1.2f" % f2
+			jState.position[0]=f0
+			jState.position[1]=f1
+			jState.position[2]=f2
 
-			# jState.position[0]=f0
-			# jState.position[1]=f1
-			# jState.position[2]=f2
+			jState.header.stamp=rospy.Time.now()
+			pub.publish(jState)
 
-			# jState.header.stamp=rospy.Time.now()
-			# pub.publish(jState)
-			
 		except Exception, e:
-			pass
-			print "read_exception" + str(e)
+			print "read_exception " + str(e)
 
 
 def serial_init():
@@ -215,24 +202,30 @@ def serial_init():
 		rospy.signal_shutdown('Keyboard interrupt')
 		rospy.on_shutdown(on_shutdown)
 
+def bin2rad(num):
+	return num*pi/2048
+
 if __name__ == '__main__':
 	# global jState, pub
 
 	try:
 		rospy.init_node('test', anonymous=True)  
+
 		serial_init()
+		ser.flushInput()
 
 		pub = rospy.Publisher('/joint_states', JointState, queue_size=10)
+		
 		jState=JointState()
 		jState.name=["joint0","joint1", "joint2"]
 		jState.position=[0.0, 0.0, 0.0]
 
 		rate = rospy.Rate(10) # 10hz 
 
-
 		thread = threading.Thread(target=read)
 		thread.start()
 
 		loop()
+
 	except rospy.ROSInterruptException:
 		pass
