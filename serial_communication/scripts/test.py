@@ -10,6 +10,7 @@ from bombel_msg import bombel_msg
 from std_msgs.msg import String
 from sensor_msgs.msg import JointState
 from math import *
+
 ser=0
 jState=0
 pub=0
@@ -27,11 +28,11 @@ class bcolors:
 
 def on_shutdown():
 	ser.close()
-	print(bcolors.FAIL+'SysQuitting'+bcolors.ENDC)
+	print(bcolors.FAIL+'SysQuitting \n'+bcolors.ENDC)
 
 def shutdown(reason):
 	ser.close()
-	print(bcolors.FAIL+'Quitting'+bcolors.ENDC)
+	print(bcolors.FAIL+'Quitting \n'+bcolors.ENDC)
 	rospy.signal_shutdown(reason)
 
 
@@ -40,7 +41,7 @@ def serial_send(msg):
 
 	line = []
 	if msg > 255:
-		print "Msg is defined as 8bit (int<256)"
+		print "Msg is defined as 8bit (int<256) \n"
 		return
 	if ser.isOpen():
 
@@ -50,10 +51,10 @@ def serial_send(msg):
 			bytes_sent = ser.write(struct.pack('!B',msg))
 
 		except Exception, e1:
-			print "error communicating...: " + str(e1)
+			print "error communicating...: " + str(e1) + "\n"
 
 	else:
-		print "Serial port is closed."
+		print "Serial port is closed.\n"
 
 def loop():
 	while not rospy.is_shutdown():
@@ -64,11 +65,25 @@ def loop():
 			shutdown('Invalid menu option')
 		else:
 			if option == 1:
-				disp_menu(1)			
-				hw_config_cmd()
+				disp_menu(1)		
+				try:
+					option=int(raw_input('Choose option: '))	
+				except Exception, e:
+					print "HW MENU: "+str(e) + "\n"
+				else:
+					hw_config_cmd(option)
 			elif option == 2:
 				disp_menu(2)
-				joint_space_cmd()
+
+				try:
+					f0=float(raw_input('JOINT 0 :'))
+					f1=float(raw_input('JOINT 1 :'))
+					f2=float(raw_input('JOINT 2 :'))
+					speed=int(raw_input('SPEED :'))
+				except Exception, e:
+					print "JINT MENU: "+str(e) + "\n"
+				else:
+					joint_space_cmd(f0,f1,f2,speed)
 
 			rate.sleep()
 
@@ -81,36 +96,34 @@ def disp_menu(option):
 		print('[Q]' + 'Quit')
 
 	elif option == 1:
-		print('======HW_CONFIG========')
+		print('======MSG_HW_CONFIG========')
 		print('[1]' + 'Turn motors on')
 		print('[2]' + 'Turn motors off')
 		print('[3]' + 'Turn fans on')
 		print('[4]' + 'Turn fans off')
 	elif option == 2:
-		print('======JOINT_SPACE========')
+		print('======MSG_JOINT_SPACE========')
 	else:
 		print('Invalid option')
 
-def joint_space_cmd():
+def joint_space_cmd(f0,f1,f2,speed):
 	dir_flag=0;
-	f1=0
-	f2=0
-	f3=0
 
 	try:
-		f0=float(raw_input('JOINT 0 :'))
-		f1=float(raw_input('JOINT 1 :'))
-		f2=float(raw_input('JOINT 2 :'))
 
 		f0=int(f0*2048/pi)
 		f1=int(f1*2048/pi)
 		f2=int(f2*2048/pi)
+		
 
 	except ValueError:
 		print(bcolors.FAIL+'Incorrect input data type'+bcolors.ENDC)
 	else:
 		if abs(f0) >= pow(2,12)-1 or abs(f1) >= pow(2,12)-1 or abs(f2) >= pow(2,12)-1:
-			print("F0 or F1 or F2: Out of range")
+			print("F0 or F1 or F2: Out of range \n")
+			return
+		if speed <0 or speed>200 :
+			print("Speed Out of range : "+str(speed)+" \n")
 			return
 
 		if f0 < 0 :
@@ -123,28 +136,37 @@ def joint_space_cmd():
 			dir_flag+=4;
 			f2=-f2
 
-		serial_send((dir_flag<<3) + bombel_msg.JOINT_SPACE)
+		serial_send((dir_flag<<3) + bombel_msg.MSG_JOINT_SPACE)
 		serial_send((f0 >> 4))
 		serial_send(((f0 & 0x00F)<<4) + (f1>>8))
 		serial_send((f1 & 0x0FF))
 		serial_send((f2 >> 4))
 		serial_send((f2 & 0x00F))
+		serial_send(speed)
+		serial_send(speed)
+		serial_send(speed)
 
 
-def hw_config_cmd():
-	option=int(raw_input('Choose option: '))
+def hw_config_cmd(option):
+	action=0
 
-	if option == bombel_msg.MOTORS_ON:
-		action = bombel_msg.MOTORS_ON;
-	elif option == bombel_msg.MOTORS_OFF:
-		action = bombel_msg.MOTORS_OFF;
-	elif option == bombel_msg.FANS_ON:
-		action = bombel_msg.FANS_ON;
-	elif option == bombel_msg.FANS_OFF:
-		action = bombel_msg.FANS_OFF;
+	if option == bombel_msg.HW_MOTORS_ON:
+		action = bombel_msg.HW_MOTORS_ON;
+	elif option == bombel_msg.HW_MOTORS_OFF:
+		action = bombel_msg.HW_MOTORS_OFF
+	elif option == bombel_msg.HW_FANS_ON:
+		action = bombel_msg.HW_FANS_ON
+	elif option == bombel_msg.HW_FANS_OFF:
+		action = bombel_msg.HW_FANS_OFF
+	else:
+		print "Order unrecognized. \n"
+		return
 
-	serial_send(bombel_msg.HW_CONFIG)
+	serial_send(bombel_msg.MSG_HW_CONFIG)
 	serial_send(action)
+	serial_send(0)
+	serial_send(0)
+	serial_send(0)
 	serial_send(0)
 	serial_send(0)
 	serial_send(0)
@@ -161,13 +183,12 @@ def read():
 
 			order_type=int(line[0])
 
-			if order_type == bombel_msg.ROBOT_STATE :
+			if order_type == bombel_msg.RESP_ROBOT_STATE :
 			
 				f0=bin2rad(int(line[1]))
 				f1=bin2rad(int(line[2]))
 				f2=bin2rad(int(line[3]))
 
-				# print "%1.2f" % f0 +" "+"%1.2f" % f1+" "+"%1.2f" % f2
 				jState.position[0]=f0
 				jState.position[1]=f1
 				jState.position[2]=f2
@@ -175,13 +196,16 @@ def read():
 				jState.header.stamp=rospy.Time.now()
 				pub.publish(jState)
 
-			elif  order_type == bombel_msg.ORDER_ERROR :
-				print "Order error"
+			elif  order_type == bombel_msg.RESP_ORDER_ERROR :
+				print "Order error \n"
+			elif  order_type == bombel_msg.RESP_ORDER_BUFFER_OVERFLOW :
+				print "Buffer overflow\n"				
 
 
 
 		except Exception, e:
-			print "read_exception " + str(e)
+			# pass
+			print "read_exception " + str(e) + "\n"
 
 
 def serial_init():
@@ -209,7 +233,7 @@ def serial_init():
 	try: 
 		ser.open()
 	except Exception, e:
-		print "Opening serial port error: " + str(e)
+		print "Opening serial port error: " + str(e) + "\n"
 		rospy.signal_shutdown('Keyboard interrupt')
 		rospy.on_shutdown(on_shutdown)
 
@@ -218,6 +242,13 @@ def bin2rad(num):
 
 if __name__ == '__main__':
 	# global jState, pub
+
+	f0=0
+	f1=0
+	f2=0
+	delta_s=20
+	delta_p=0.2
+	speed=120
 
 	try:
 		rospy.init_node('test', anonymous=True)  
@@ -235,6 +266,28 @@ if __name__ == '__main__':
 		thread = threading.Thread(target=read)
 		ser.flushInput()
 		thread.start()
+
+		# hw_config_cmd(bombel_msg.FANS_ON)
+		# hw_config_cmd(bombel_msg.MOTORS_ON)
+		
+		# joint_space_cmd(f0,f1,f2,120)
+		# speed=0
+		# for i in range(5):
+		# 	f0+=delta_p
+		# 	f1+=delta_p
+		# 	f2+=delta_p
+		# 	speed+=delta_s
+		# 	print str(i)+" "+str(speed)
+		# 	joint_space_cmd(f0,f1,f2,speed)
+
+		# speed=120
+		# for i in range(5):		
+		# 	f0+=delta_p
+		# 	f1+=delta_p
+		# 	f2+=delta_p
+		# 	speed-=delta_s
+		# 	print str(i)+" "+str(speed)
+		# 	joint_space_cmd(f0,f1,f2,speed)
 
 		loop()
 
