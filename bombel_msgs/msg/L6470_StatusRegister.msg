@@ -1,0 +1,15 @@
+bool HiZ
+bool BUSY
+bool SW_F
+bool SW_EVN
+bool DIR
+uint16 MOT_STATUS        
+bool NOTPERF_CMD
+bool WRONG_CMD
+bool UVLO
+bool TH_WRN
+bool TH_SD
+bool OCD
+bool STEP_LOSS_A
+bool STEP_LOSS_B
+bool SCK_MOD
