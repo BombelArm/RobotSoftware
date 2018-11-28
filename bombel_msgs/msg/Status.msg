@@ -1,0 +1,9 @@
+uint32 stepper1_status_register
+uint32 stepper2_status_register
+uint32 stepper3_status_register
+uint32 stepper1_pos
+uint32 stepper2_pos
+uint32 stepper3_pos
+uint16 encoder1_pos
+uint16 encoder2_pos
+uint16 encoder3_pos
