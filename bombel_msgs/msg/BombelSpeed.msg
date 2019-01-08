@@ -1,0 +1,4 @@
+uint32 joint0_speed
+uint32 joint1_speed
+uint32 joint2_speed
+uint32 joint3_speed

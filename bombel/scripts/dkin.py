@@ -5,6 +5,7 @@ import rospy
 from std_msgs.msg import *
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import JointState
+from bombel_msgs.msg import BombelState
 
 import tf
 from math import *
@@ -12,7 +13,9 @@ from math import *
 
 
 
-pub=0
+posePublisher=0
+robotStatePublisher=0
+seq=0
 
 d1=0
 a2=0
@@ -21,29 +24,44 @@ a4=0
 theta4=0
 
 def msg_received(data):
-	global pub, d1, a2, a3, a4, theta4
+	global posePublisher, robotStatePublisher, d1, a2, a3, a4, theta4, seq
 
 
-	theta1=data.position[0]
-	theta2=data.position[1]
-	theta3=data.position[2]
+	encoder0=data.encoder0_pos
+	encoder1=data.encoder1_pos
+	encoder2=data.encoder2_pos
 
-	msg=PoseStamped()
-	msg.header.frame_id="base_link"
-	msg.header.stamp=rospy.Time.now()
+	theta1 = (encoder0 / pow(2,11)) * pi
+	theta2 = (encoder1 / pow(2,11)) * pi
+	theta3 = (encoder2 / pow(2,11)) * pi
+
+	poseMsg=PoseStamped()
+	jointMsg = JointState()
+
+	poseMsg.header.frame_id="base_link"
+	poseMsg.header.stamp=rospy.Time.now()
 
 	const_xy=a2*sin(theta2)+a3*sin(theta2+theta3)+a4*sin(theta2+theta3+pi/4)
-	msg.pose.position.x=cos(theta1)*const_xy
-	msg.pose.position.y=sin(theta1)*const_xy
-	msg.pose.position.z=d1+a2*cos(theta2)+a3*cos(theta2+theta3)+a4*cos(theta2+theta3+theta4)
+	poseMsg.pose.position.x=cos(theta1)*const_xy
+	poseMsg.pose.position.y=sin(theta1)*const_xy
+	poseMsg.pose.position.z=d1+a2*cos(theta2)+a3*cos(theta2+theta3)+a4*cos(theta2+theta3+theta4)
 
 	quaternion = tf.transformations.quaternion_from_euler(0, theta2+theta3-theta4, theta1)
-	msg.pose.orientation.x=quaternion[0]
-	msg.pose.orientation.y=quaternion[1]
-	msg.pose.orientation.z=quaternion[2]
-	msg.pose.orientation.w=quaternion[3]
+	poseMsg.pose.orientation.x=quaternion[0]
+	poseMsg.pose.orientation.y=quaternion[1]
+	poseMsg.pose.orientation.z=quaternion[2]
+	poseMsg.pose.orientation.w=quaternion[3]
 
-	pub.publish(msg)
+	jointMsg.header.seq = seq
+	seq += 1
+	jointMsg.header.stamp = rospy.Time().now()
+
+	jointMsg.name = ['joint0', 'joint1', 'joint2']
+	jointMsg.position= [theta1, theta2, theta3]
+
+
+	posePublisher.publish(poseMsg)
+	robotStatePublisher.publish(jointMsg)
 
 
 def get_params():
@@ -83,8 +101,9 @@ if __name__ == '__main__':
 	rospy.init_node('dkin', anonymous=True)
 	get_params()
 
-	pub = rospy.Publisher('/bombel_dkin', PoseStamped, queue_size=100)
-	rospy.Subscriber("/joint_states", JointState, msg_received)
+	posePublisher = rospy.Publisher('/bombel_dkin', PoseStamped, queue_size=100)
+	robotStatePublisher = rospy.Publisher('/joint_states', JointState, queue_size=100)
+	rospy.Subscriber("/bombel/state", BombelState, msg_received)
 
 	rate = rospy.Rate(10) # 10hz
 
