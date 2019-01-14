@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   rospy
   std_msgs
+  sensor_msgs
+  geometry_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -51,12 +53,14 @@ add_message_files(
   FILES
   BombelState.msg
   BombelSpeed.msg
+  BombelPos.msg
 )
 
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
   AddTwoInts.srv
+  BombelIkin.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -70,6 +74,8 @@ add_service_files(
 generate_messages(
   DEPENDENCIES
   std_msgs
+  geometry_msgs
+  sensor_msgs
 )
 
 ################################################

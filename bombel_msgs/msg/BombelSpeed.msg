@@ -1,4 +1,4 @@
-uint32 joint0_speed
-uint32 joint1_speed
-uint32 joint2_speed
-uint32 joint3_speed
+int16  seq
+int16 joint0_speed
+int16 joint1_speed
+int16 joint2_speed
