@@ -61,6 +61,7 @@ add_service_files(
   FILES
   AddTwoInts.srv
   BombelIkin.srv
+  BombelDikin.srv
 )
 
 ## Generate actions in the 'action' folder

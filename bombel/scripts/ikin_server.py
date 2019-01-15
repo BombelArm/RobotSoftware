@@ -6,14 +6,14 @@ from std_msgs.msg import *
 
 from geometry_msgs.msg import PoseStamped, Point
 from sensor_msgs.msg import JointState
-from bombel.srv import *
+from bombel_msgs.srv import *
 
 import tf
 from math import *
 
 
 
-pub=0
+loopRate = 100
 
 theta1_lower=0
 theta1_upper=0
@@ -28,27 +28,20 @@ a3=0
 a4=0
 theta4=0
 
-jState=JointState()
-
 def calc_ikin(req):
-	global pub, d1, a2, a3, a4, theta4, jState, theta1_lower, theta1_upper, theta2_lower, theta2_upper, theta3_lower, theta3_upper
+	global pub, d1, a2, a3, a4, theta4, theta1_lower, theta1_upper, theta2_lower, theta2_upper, theta3_lower, theta3_upper
 
-
-
-	x=req.x
-	y=req.y
-	z=req.z
+	response = BombelIkinResponse()
+	response.jointState = []
+	x=req.point.x
+	y=req.point.y
+	z=req.point.z
 
 	beta=atan2(a4*sin(theta4),a3+a4*cos(theta4))
 	k=a4*sin(pi-theta4)/sin(beta)
 
-	# cos3_prim=(pow(x,2)+pow(y,2)+pow(z-d1,2)-pow(a2,2)-pow(k,2))/2*a2*k
-	# sin3_prim=sqrt(1-pow(cos3_prim,2))
-	# theta3_prim=atan2(sin3_prim,cos3_prim)
-
 	if (sqrt(x*x+y*y+(z-d1)*(z-d1)) >= a2+k):
-		return pointResponse("Fault coordinates")
-
+		return response
 
 	cos3=(x*x+y*y+(z-d1)*(z-d1)-a2*a2-k*k)/(2*a2*k)
 	sin3=sqrt(1-pow(cos3,2))
@@ -62,17 +55,16 @@ def calc_ikin(req):
 	# 	return pointResponse("Theta1 violation"+str(theta1))
 		
 	if theta2>theta2_upper or theta2<theta2_lower :
-		return pointResponse("Theta2 violation"+str(theta2))
+		# Theta2 violation
+		return response
 		
 	if theta3>theta3_upper or theta3<theta3_lower :
-		return pointResponse("Theta3 violation"+str(theta3))
-		
+		# Theta3 violation
+		return response
 
-	jState.position[0]=theta1
-	jState.position[1]=theta2
-	jState.position[2]=theta3
+	response.jointState = [theta1, theta2, theta3]
 
-	return pointResponse("[IKIN_SRV] Service called properly \n")
+	return response
 
 
 def get_params():
@@ -148,18 +140,11 @@ if __name__ == '__main__':
 	rospy.init_node('ikin_server', anonymous=True)
 	get_params()
 
-	pub = rospy.Publisher('/joint_states', JointState, queue_size=10)
-	# rospy.Subscriber("/joint_states", JointState, msg_received)
-	s = rospy.Service('calc_ikin', point, calc_ikin)
+	s = rospy.Service('bombel/ikin_server', BombelIkin, calc_ikin)
 
-	rate = rospy.Rate(10) # 10hz
+	rate = rospy.Rate(loopRate) # 10hz
 	rospy.loginfo("[Ikin_Server] Init OK!")
 
-	jState.name=["joint0","joint1", "joint2"]
-	jState.position=[0.0, 0.0, 0.0]
-
 	while not rospy.is_shutdown():
-		jState.header.stamp=rospy.Time.now()
-		pub.publish(jState)
 		rate.sleep()
 

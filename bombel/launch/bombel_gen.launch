@@ -18,9 +18,16 @@
   <param name="theta3_lower" value="-2" />
 
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+  <node name="DIKIN_SERVER" pkg="bombel" type="dikin_server.py" output="screen"/>
+  <node name="IKIN_SERVER" pkg="bombel" type="ikin_server.py" output="screen"/>
+  <node name="BombelJointStatePublisher" pkg="bombel" type="bombel_joint_state_publisher.py" output="screen"/>
 
-  <node name="IKIN_SERVER" pkg="bombel" type="ikin_server.py" output="screen"/> 
-  
+
+  <node pkg="rosserial_python" type="serial_node.py" name="serial_node" output="screen">
+    <param name="port" value="/dev/ttyACM0"/>
+    <param name="baud" value="230400"/>
+  </node>
+
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
 
 

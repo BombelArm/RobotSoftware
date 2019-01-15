@@ -31,9 +31,9 @@ def msg_received(data):
 	encoder1=data.encoder1_pos
 	encoder2=data.encoder2_pos
 
-	theta1 = (encoder0 / pow(2,11)) * pi
-	theta2 = (encoder1 / pow(2,11)) * pi
-	theta3 = (encoder2 / pow(2,11)) * pi
+	theta1 = (encoder0 / pow(2,10)) * pi
+	theta2 = (encoder1 / pow(2,10)) * pi
+	theta3 = (encoder2 / pow(2,10)) * pi
 
 	poseMsg=PoseStamped()
 	jointMsg = JointState()
@@ -60,7 +60,7 @@ def msg_received(data):
 	jointMsg.position= [theta1, theta2, theta3]
 
 
-	posePublisher.publish(poseMsg)
+	# posePublisher.publish(poseMsg)
 	robotStatePublisher.publish(jointMsg)
 
 
@@ -98,7 +98,7 @@ def get_params():
 		rospy.signal_shutdown("No theta4 param")		
 
 if __name__ == '__main__':
-	rospy.init_node('dkin', anonymous=True)
+	rospy.init_node('BombelJointStatePublisher', anonymous=True)
 	get_params()
 
 	posePublisher = rospy.Publisher('/bombel_dkin', PoseStamped, queue_size=100)
