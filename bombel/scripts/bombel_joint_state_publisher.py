@@ -26,7 +26,6 @@ theta4=0
 def msg_received(data):
 	global posePublisher, robotStatePublisher, d1, a2, a3, a4, theta4, seq
 
-
 	encoder0=data.encoder0_pos
 	encoder1=data.encoder1_pos
 	encoder2=data.encoder2_pos
@@ -34,6 +33,7 @@ def msg_received(data):
 	theta1 = (encoder0 / pow(2,10)) * pi
 	theta2 = (encoder1 / pow(2,10)) * pi
 	theta3 = (encoder2 / pow(2,10)) * pi
+
 
 	poseMsg=PoseStamped()
 	jointMsg = JointState()
