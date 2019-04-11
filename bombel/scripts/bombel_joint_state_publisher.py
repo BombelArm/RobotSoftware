@@ -21,18 +21,18 @@ d1=0
 a2=0
 a3=0
 a4=0
-theta4=0
+theta3=0
 
 def msg_received(data):
-	global posePublisher, robotStatePublisher, d1, a2, a3, a4, theta4, seq
+	global posePublisher, robotStatePublisher, d1, a2, a3, a4, theta3, seq
 
 	encoder0=data.encoder0_pos
 	encoder1=data.encoder1_pos
 	encoder2=data.encoder2_pos
 
-	theta1 = (encoder0 / pow(2,10)) * pi
-	theta2 = (encoder1 / pow(2,10)) * pi
-	theta3 = (encoder2 / pow(2,10)) * pi
+	theta0 = (encoder0 / pow(2,11)) * pi
+	theta1 = (encoder1 / pow(2,11)) * pi
+	theta2 = (encoder2 / pow(2,11)) * pi
 
 
 	poseMsg=PoseStamped()
@@ -41,12 +41,12 @@ def msg_received(data):
 	poseMsg.header.frame_id="base_link"
 	poseMsg.header.stamp=rospy.Time.now()
 
-	const_xy=a2*sin(theta2)+a3*sin(theta2+theta3)+a4*sin(theta2+theta3+pi/4)
-	poseMsg.pose.position.x=cos(theta1)*const_xy
-	poseMsg.pose.position.y=sin(theta1)*const_xy
-	poseMsg.pose.position.z=d1+a2*cos(theta2)+a3*cos(theta2+theta3)+a4*cos(theta2+theta3+theta4)
+	const_xy=a2*sin(theta1)+a3*sin(theta1+theta2)+a4*sin(theta1+theta2+pi/4)
+	poseMsg.pose.position.x=cos(theta0)*const_xy
+	poseMsg.pose.position.y=sin(theta0)*const_xy
+	poseMsg.pose.position.z=d1+a2*cos(theta1)+a3*cos(theta1+theta2)+a4*cos(theta1+theta2+theta3)
 
-	quaternion = tf.transformations.quaternion_from_euler(0, theta2+theta3-theta4, theta1)
+	quaternion = tf.transformations.quaternion_from_euler(0, theta1+theta2-theta3, theta0)
 	poseMsg.pose.orientation.x=quaternion[0]
 	poseMsg.pose.orientation.y=quaternion[1]
 	poseMsg.pose.orientation.z=quaternion[2]
@@ -57,7 +57,7 @@ def msg_received(data):
 	jointMsg.header.stamp = rospy.Time().now()
 
 	jointMsg.name = ['joint0', 'joint1', 'joint2']
-	jointMsg.position= [theta1, theta2, theta3]
+	jointMsg.position= [theta0, theta1, theta2]
 
 
 	# posePublisher.publish(poseMsg)
@@ -65,7 +65,7 @@ def msg_received(data):
 
 
 def get_params():
-	global d1, a2, a3, a4, theta4
+	global d1, a2, a3, a4, theta3
 
 	if rospy.has_param('d1'):
 		d1 = rospy.get_param("d1")
@@ -91,11 +91,11 @@ def get_params():
 		print "No a4 param"+"\n"
 		rospy.signal_shutdown("No a4 param")
 	
-	if rospy.has_param('theta4'):
-		theta4 = rospy.get_param("theta4")
+	if rospy.has_param('theta3'):
+		theta3 = rospy.get_param("theta3")
 	else:
-		print "No theta4 param"+"\n"
-		rospy.signal_shutdown("No theta4 param")		
+		print "No theta3 param"+"\n"
+		rospy.signal_shutdown("No theta3 param")		
 
 if __name__ == '__main__':
 	rospy.init_node('BombelJointStatePublisher', anonymous=True)

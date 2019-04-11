@@ -8,6 +8,7 @@ Panels:
         - /Status1
         - /RobotModel1
         - /RobotModel1/Links1
+        - /Path1
       Splitter Ratio: 0.5
     Tree Height: 429
   - Class: rviz/Selection
@@ -162,13 +163,13 @@ Visualization Manager:
       Axes Length: 1
       Axes Radius: 0.100000001
       Class: rviz/Pose
-      Color: 255; 25; 0
+      Color: 221; 255; 0
       Enabled: true
-      Head Length: 0.300000012
-      Head Radius: 0.100000001
+      Head Length: 0.0500000007
+      Head Radius: 0.0199999996
       Name: Pose
-      Shaft Length: 1
-      Shaft Radius: 0.0500000007
+      Shaft Length: 0.100000001
+      Shaft Radius: 0.00999999978
       Shape: Arrow
       Topic: /generator/pose
       Unreliable: false
@@ -198,7 +199,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 3.04215837
+      Distance: 2.59351945
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
@@ -213,10 +214,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.670397162
+      Pitch: 0.555397272
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.55857027
+      Yaw: 1.15357065
     Saved: ~
 Window Geometry:
   Displays:

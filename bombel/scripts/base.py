@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 import rospy
-import copy
 
 from std_msgs.msg import *
+from math import *
 
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import Point
@@ -46,18 +46,16 @@ def calculateDkin(jointState):
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
 
+
 def calculatePoly(x,ox, ta, t):
   result  = ((-2.0*(x-ox))/(t*t*t))*(ta*ta*ta) + ((3.0*(x-ox))/(t*t))*(ta*ta) + ox; 
   return result 
 
-def interpolate(startPos, endPos, timeOfExecution, loopRate):
+def interpolatePosition(startPos, endPos, timeOfExecution, loopRate):
+	bombelPos = BombelPos()
+
 	poseStampedMsg = PoseStamped()
 	poseStampedMsg.header.frame_id= "base_link"
-	poseStampedMsg.pose.position = copy.deepcopy(startPos)
-
-	jointStateMsg = JointState()
-	jointStateMsg.name = ["joint0", "joint1", "joint2"]
-	jointStateMsg.position = [0.0, 0.0, 0.0]
 
 	pathMsg = Path()
 	pathMsg.header.frame_id = "base_link"
@@ -65,6 +63,7 @@ def interpolate(startPos, endPos, timeOfExecution, loopRate):
 	nextPosition = Point()
 
 	timeNow = 0.0
+	seq = 0
 	rate =rospy.Rate(loopRate)
 
 	while(not rospy.is_shutdown()):
@@ -90,19 +89,35 @@ def interpolate(startPos, endPos, timeOfExecution, loopRate):
 		pathMsg.poses.append(poseStampedMsg)
 		pathPublisher.publish(pathMsg)
 
-		#sending JointState to Rviz
-		jointStateMsg.header.stamp = timestamp
-		jointStateMsg.position = nextJointState
-		jointStatePublisher.publish(jointStateMsg)
+		#sending cmd to Bombel
+		bombelPos.seq = seq
+		bombelPos.joint0_pos = nextJointState[0]
+		bombelPos.joint1_pos = nextJointState[1]
+		bombelPos.joint2_pos = nextJointState[2]
+		bombelPosPub.publish(bombelPos)
 
 		print "Pos: x:{0} y:{1} z:{2}\ttime {3}".format(nextPosition.x, nextPosition.y, nextPosition.z,timeNow)
 
+		seq += 1
 		timeNow = timeNow + 1.0/loopRate
 		if(timeNow >= timeOfExecution):
 			break;
 		rate.sleep()
 
+	#stopping bombel
+	bombelPos.seq = -1
+	bombelPosPub.publish(bombelPos)
 	print "Interpolation from {0} to {1} ended.".format(startPos,endPos)
+
+
+def getActualPos():
+	pos = rospy.wait_for_message("/bombel/state", BombelState)
+
+	theta0 = (pos.encoder0_pos / pow(2,11)) * pi
+	theta1 = (pos.encoder1_pos / pow(2,11)) * pi
+	theta2 = (pos.encoder2_pos / pow(2,11)) * pi
+
+	return [theta0, theta1, theta2]
 
 if __name__ == '__main__':
 	rospy.init_node('generator', anonymous=True)
@@ -118,15 +133,7 @@ if __name__ == '__main__':
 	rate = rospy.Rate(loopRate)
 
 	#setting up messages
-	pos1 = calculateDkin([0.0, 0.0, 0.0]);
+	startPos = calculateDkin(getActualPos())
+	endPos = calculateDkin([0.0, 0.0, 0.0]);
 
-	poseStampedMsg = PoseStamped()
-
-    
-	# currentPosition = copy.deepcopy(startPos)
-
-	rospy.loginfo("[Ikin_Client] Init OK!")
-
-	interpolate(pos1,pos2,timeOfExecution,loopRate)
-	interpolate(pos2,pos3,timeOfExecution,loopRate)
-	interpolate(pos3,pos1,timeOfExecution,loopRate)
+	interpolatePosition(startPos,endPos,timeOfExecution,loopRate)

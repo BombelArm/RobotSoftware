@@ -46,14 +46,6 @@ def calculateDkin(jointState):
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
 
-def getActualJointState():
-	bombelEncoders = rospy.wait_for_message("/bombel/state", BombelState)
-	theta1 = (bombelEncoders.encoder0_pos / pow(2,10)) * pi
-	theta2 = (bombelEncoders.encoder1_pos / pow(2,10)) * pi
-	theta3 = (bombelEncoders.encoder2_pos / pow(2,10)) * pi
-
-	return [theta1, theta2, theta3]
-
 def calculatePoly(x,ox, ta, t):
   result  = ((-2.0*(x-ox))/(t*t*t))*(ta*ta*ta) + ((3.0*(x-ox))/(t*t))*(ta*ta) + ox; 
   return result 
@@ -115,52 +107,6 @@ def interpolatePosition(startPos, endPos, timeOfExecution, loopRate):
 	bombelPos.seq = -1
 	bombelPosPub.publish(bombelPos)
 	print "Interpolation from {0} to {1} ended.".format(startPos,endPos)
-
-def base(timeOfExecution,loopRate):
-	bombelPos = BombelPos()
-	poseStampedMsg = PoseStamped()
-	poseStampedMsg.header.frame_id= "base_link"
-
-	print 'waiting for message'
-
-	bombelEncoders = rospy.wait_for_message("/bombel/state", BombelState)
-	theta1 = (bombelEncoders.encoder0_pos / pow(2,10)) * pi
-	theta2 = (bombelEncoders.encoder1_pos / pow(2,10)) * pi
-	theta3 = (bombelEncoders.encoder2_pos / pow(2,10)) * pi
-
-
-	actualPosition = calculateDkin([theta1, theta2, theta3])
-	endPosition = calculateDkin([0.0, 0.0, 0.0])
-
-	interpolatePosition(actualPosition,endPosition,timeOfExecution, loopRate)
-
-
-	# endJointPosition = [0.0, 0.0, 0.0]
-	# nextJointPosition = [None] * 3
-
-	# timeNow = 0.0
-	# seq = 0
-	# rate =rospy.Rate(loopRate)
-
-	# while(not rospy.is_shutdown()):
-
-	# 	#sending cmd to Bombel
-	# 	bombelPos.seq = seq
-	# 	bombelPos.joint0_pos = calculatePoly(endJointPosition[0], theta1, timeNow, timeOfExecution)
-	# 	bombelPos.joint1_pos = calculatePoly(endJointPosition[1], theta2, timeNow, timeOfExecution)
-	# 	bombelPos.joint2_pos = calculatePoly(endJointPosition[2], theta3, timeNow, timeOfExecution)
-	# 	bombelPosPub.publish(bombelPos)
-
-	# 	seq += 1
-	# 	timeNow = timeNow + 1.0/loopRate
-	# 	if(timeNow >= timeOfExecution):
-	# 		break;
-	# 	rate.sleep()
-
-	# #stopping bombel
-	# bombelPos.seq = -1
-	# bombelPosPub.publish(bombelPos)
-	print "Robot is based."
 
 
 if __name__ == '__main__':
