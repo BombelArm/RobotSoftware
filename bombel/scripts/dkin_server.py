@@ -18,23 +18,23 @@ d1=0
 a2=0
 a3=0
 a4=0
-theta4=0
+theta3=0
 
 def calc_dikin(req):
-	global  d1, a2, a3, a4, theta4, seq
+	global  d1, a2, a3, a4, theta3, seq
 
 	response = BombelDikinResponse()
 	
-	theta1 = req.jointState[0]
-	theta2 = req.jointState[1]
-	theta3 = req.jointState[2]
+	theta0 = req.jointState[0]
+	theta1 = req.jointState[1]
+	theta2 = req.jointState[2]
 
-	const_xy=a2*sin(theta2)+a3*sin(theta2+theta3)+a4*sin(theta2+theta3+pi/4)
-	response.point.x=cos(theta1)*const_xy
-	response.point.y=sin(theta1)*const_xy
-	response.point.z=d1+a2*cos(theta2)+a3*cos(theta2+theta3)+a4*cos(theta2+theta3+theta4)
+	const_xy=a2*sin(theta1)+a3*sin(theta1+theta2)+a4*sin(theta1+theta2+pi/4)
+	response.point.x=cos(theta0)*const_xy
+	response.point.y=sin(theta0)*const_xy
+	response.point.z=d1+a2*cos(theta1)+a3*cos(theta1+theta2)+a4*cos(theta1+theta2+theta3)
 
-	# quaternion = tf.transformations.quaternion_from_euler(0, theta2+theta3-theta4, theta1)
+	# quaternion = tf.transformations.quaternion_from_euler(0, theta1+theta2-theta3, theta0)
 	# poseMsg.pose.orientation.x=quaternion[0]
 	# poseMsg.pose.orientation.y=quaternion[1]
 	# poseMsg.pose.orientation.z=quaternion[2]
@@ -44,7 +44,7 @@ def calc_dikin(req):
 
 
 def get_params():
-	global d1, a2, a3, a4, theta4
+	global d1, a2, a3, a4, theta3
 
 	if rospy.has_param('d1'):
 		d1 = rospy.get_param("d1")
@@ -70,11 +70,11 @@ def get_params():
 		print "No a4 param"+"\n"
 		rospy.signal_shutdown("No a4 param")
 	
-	if rospy.has_param('theta4'):
-		theta4 = rospy.get_param("theta4")
+	if rospy.has_param('theta3'):
+		theta3 = rospy.get_param("theta3")
 	else:
-		print "No theta4 param"+"\n"
-		rospy.signal_shutdown("No theta4 param")		
+		print "No theta3 param"+"\n"
+		rospy.signal_shutdown("No theta3 param")		
 
 if __name__ == '__main__':
 	rospy.init_node('ikin_server', anonymous=True)

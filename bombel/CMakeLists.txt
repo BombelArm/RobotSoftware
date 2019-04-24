@@ -162,6 +162,7 @@ install(PROGRAMS
   scripts/ikin_server.py
   scripts/ikin_client.py
   scripts/generator.py
+  scripts/test.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

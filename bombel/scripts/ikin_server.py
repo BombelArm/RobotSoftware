@@ -15,21 +15,21 @@ from math import *
 
 loopRate = 100
 
+theta0_lower=0
+theta0_upper=0
 theta1_lower=0
 theta1_upper=0
 theta2_lower=0
 theta2_upper=0
-theta3_lower=0
-theta3_upper=0
 
 d1=0
 a2=0
 a3=0
 a4=0
-theta4=0
+theta3=0
 
 def calc_ikin(req):
-	global pub, d1, a2, a3, a4, theta4, theta1_lower, theta1_upper, theta2_lower, theta2_upper, theta3_lower, theta3_upper
+	global pub, d1, a2, a3, a4, theta3, theta0_lower, theta0_upper, theta1_lower, theta1_upper, theta2_lower, theta2_upper
 
 	response = BombelIkinResponse()
 	response.jointState = []
@@ -37,38 +37,38 @@ def calc_ikin(req):
 	y=req.point.y
 	z=req.point.z
 
-	beta=atan2(a4*sin(theta4),a3+a4*cos(theta4))
-	k=a4*sin(pi-theta4)/sin(beta)
+	beta=atan2(a4*sin(theta3),a3+a4*cos(theta3))
+	k=a4*sin(pi-theta3)/sin(beta)
 
 	if (sqrt(x*x+y*y+(z-d1)*(z-d1)) >= a2+k):
 		return response
 
-	cos3=(x*x+y*y+(z-d1)*(z-d1)-a2*a2-k*k)/(2*a2*k)
-	sin3=sqrt(1-pow(cos3,2))
-	theta3_prim=atan2(sin3,cos3)
+	cos2=(x*x+y*y+(z-d1)*(z-d1)-a2*a2-k*k)/(2*a2*k)
+	sin2=sqrt(1-pow(cos2,2))
+	theta2_prim=atan2(sin2,cos2)
 
-	theta1=atan2(y,x)
-	theta2=atan2(sqrt(x*x+y*y),z-d1)-atan2(k*sin(theta3_prim),a2+k*cos(theta3_prim))
-	theta3=theta3_prim-beta
+	theta0=atan2(y,x)
+	theta1=atan2(sqrt(x*x+y*y),z-d1)-atan2(k*sin(theta2_prim),a2+k*cos(theta2_prim))
+	theta2=theta2_prim-beta
 
-	# if theta1>theta1_upper or theta1<theta1_lower :
-	# 	return pointResponse("Theta1 violation"+str(theta1))
+	# if theta0>theta0_upper or theta0<theta0_lower :
+	# 	return pointResponse("Theta0 violation"+str(theta0))
+		
+	if theta1>theta1_upper or theta1<theta1_lower :
+		# Theta1 violation
+		return response
 		
 	if theta2>theta2_upper or theta2<theta2_lower :
 		# Theta2 violation
 		return response
-		
-	if theta3>theta3_upper or theta3<theta3_lower :
-		# Theta3 violation
-		return response
 
-	response.jointState = [theta1, theta2, theta3]
+	response.jointState = [theta0, theta1, theta2]
 
 	return response
 
 
 def get_params():
-	global d1, a2, a3, a4, theta4, theta1_lower, theta1_upper, theta2_lower, theta2_upper, theta3_lower, theta3_upper
+	global d1, a2, a3, a4, theta3, theta0_lower, theta0_upper, theta1_lower, theta1_upper, theta2_lower, theta2_upper
 
 	if rospy.has_param('d1'):
 		d1 = rospy.get_param("d1")
@@ -94,11 +94,23 @@ def get_params():
 		print "No a4 param"+"\n"
 		rospy.signal_shutdown("No a4 param")
 	
-	if rospy.has_param('theta4'):
-		theta4 = rospy.get_param("theta4")
+	if rospy.has_param('theta3'):
+		theta3 = rospy.get_param("theta3")
 	else:
-		print "No theta4 param"+"\n"
-		rospy.signal_shutdown("No theta4 param")
+		print "No theta3 param"+"\n"
+		rospy.signal_shutdown("No theta3 param")
+
+	if rospy.has_param('theta0_lower'):
+		theta0_lower = rospy.get_param("theta0_lower")
+	else:
+		print "No theta0_lower param"+"\n"
+		rospy.signal_shutdown("No theta0_lower param")			
+
+	if rospy.has_param('theta0_upper'):
+		theta0_upper = rospy.get_param("theta0_upper")
+	else:
+		print "No theta0_upper param"+"\n"
+		rospy.signal_shutdown("No theta0_upper param")
 
 	if rospy.has_param('theta1_lower'):
 		theta1_lower = rospy.get_param("theta1_lower")
@@ -123,18 +135,6 @@ def get_params():
 	else:
 		print "No theta2_upper param"+"\n"
 		rospy.signal_shutdown("No theta2_upper param")
-
-	if rospy.has_param('theta3_lower'):
-		theta3_lower = rospy.get_param("theta3_lower")
-	else:
-		print "No theta3_lower param"+"\n"
-		rospy.signal_shutdown("No theta3_lower param")			
-
-	if rospy.has_param('theta3_upper'):
-		theta3_upper = rospy.get_param("theta3_upper")
-	else:
-		print "No theta3_upper param"+"\n"
-		rospy.signal_shutdown("No theta3_upper param")
 
 if __name__ == '__main__':
 	rospy.init_node('ikin_server', anonymous=True)

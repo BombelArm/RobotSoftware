@@ -12,6 +12,8 @@ from sensor_msgs.msg import JointState
 from bombel_msgs.msg import *
 from bombel_msgs.srv import *
 
+from bombel_msgs import BombelCmdType
+BombelCmdType = BombelCmdType()
 		
 
 ikin_server = None
@@ -19,9 +21,9 @@ dikin_server = None
 
 posePublisher = None
 pathPublisher = None
-bombelPosPub = None
+bombelCmdPub = None
 
-timeOfExecution = 5
+timeOfExecution = 15
 loopRate = 20
 
 pos1 = Point(0.0, 0.0 ,0.0)
@@ -51,7 +53,7 @@ def calculatePoly(x,ox, ta, t):
   return result 
 
 def interpolatePosition(startPos, endPos, timeOfExecution, loopRate):
-	bombelPos = BombelPos()
+	bombelCmd = BombelCmd()
 
 	poseStampedMsg = PoseStamped()
 	poseStampedMsg.header.frame_id= "base_link"
@@ -64,6 +66,10 @@ def interpolatePosition(startPos, endPos, timeOfExecution, loopRate):
 	timeNow = 0.0
 	seq = 0
 	rate =rospy.Rate(loopRate)
+
+
+	bombelCmd.cmd = BombelCmdType.Start() #start 
+	bombelCmdPub.publish(bombelCmd)
 
 	while(not rospy.is_shutdown()):
 		timestamp = rospy.Time.now()
@@ -89,11 +95,12 @@ def interpolatePosition(startPos, endPos, timeOfExecution, loopRate):
 		pathPublisher.publish(pathMsg)
 
 		#sending cmd to Bombel
-		bombelPos.seq = seq
-		bombelPos.joint0_pos = nextJointState[0]
-		bombelPos.joint1_pos = nextJointState[1]
-		bombelPos.joint2_pos = nextJointState[2]
-		bombelPosPub.publish(bombelPos)
+		bombelCmd.seq = seq
+		bombelCmd.cmd = BombelCmdType.SetNextPosition() #setNextPos
+		bombelCmd.joint0_pos = nextJointState[0]
+		bombelCmd.joint1_pos = nextJointState[1]
+		bombelCmd.joint2_pos = nextJointState[2]
+		bombelCmdPub.publish(bombelCmd)
 
 		print "Pos: x:{0} y:{1} z:{2}\ttime {3}".format(nextPosition.x, nextPosition.y, nextPosition.z,timeNow)
 
@@ -104,8 +111,8 @@ def interpolatePosition(startPos, endPos, timeOfExecution, loopRate):
 		rate.sleep()
 
 	#stopping bombel
-	bombelPos.seq = -1
-	bombelPosPub.publish(bombelPos)
+	bombelCmd.cmd = 0
+	bombelCmdPub.publish(bombelCmd)
 	print "Interpolation from {0} to {1} ended.".format(startPos,endPos)
 
 
@@ -113,7 +120,7 @@ if __name__ == '__main__':
 	rospy.init_node('generator', anonymous=True)
 	posePublisher = rospy.Publisher('/generator/pose', PoseStamped, queue_size=10)
 	pathPublisher = rospy.Publisher('/generator/path',Path, queue_size=10)
-	bombelPosPub = rospy.Publisher('/bombel/pos',BombelPos, queue_size=10)
+	bombelCmdPub = rospy.Publisher('/bombel/cmd',BombelCmd, queue_size=10)
 	
 	rospy.wait_for_service('bombel/ikin_server')
 	rospy.wait_for_service('bombel/dikin_server')
@@ -128,8 +135,7 @@ if __name__ == '__main__':
 	
 	rospy.loginfo("Hardware generator ready!")
 	# base(timeOfExecution*2,loopRate)
-
-
+	
 	interpolatePosition(pos1,pos2,timeOfExecution,loopRate)
 	interpolatePosition(pos2,pos3,timeOfExecution,loopRate)
 	interpolatePosition(pos3,pos1,timeOfExecution,loopRate)

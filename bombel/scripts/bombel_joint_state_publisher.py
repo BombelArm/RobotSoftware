@@ -34,7 +34,6 @@ def msg_received(data):
 	theta1 = (encoder1 / pow(2,11)) * pi
 	theta2 = (encoder2 / pow(2,11)) * pi
 
-
 	poseMsg=PoseStamped()
 	jointMsg = JointState()
 
