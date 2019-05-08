@@ -30,6 +30,9 @@ pos1 = Point(0.0, 0.0 ,0.0)
 pos2 = Point(0.3, 0.2 ,0.2)
 pos3 = Point(0.3, -0.2 ,0.2)
 
+
+pathMsg = Path()
+
 def calculateIkin(point):
     try:
     	req = BombelIkinRequest()
@@ -53,14 +56,14 @@ def calculatePoly(x,ox, ta, t):
   return result 
 
 def interpolatePosition(startPos, endPos, timeOfExecution, loopRate):
+	global pathMsg
+	
 	bombelCmd = BombelCmd()
 
 	poseStampedMsg = PoseStamped()
 	poseStampedMsg.header.frame_id= "base_link"
 
-	pathMsg = Path()
 	pathMsg.header.frame_id = "base_link"
-
 	nextPosition = Point()
 
 	timeNow = 0.0
@@ -139,3 +142,7 @@ if __name__ == '__main__':
 	interpolatePosition(pos1,pos2,timeOfExecution,loopRate)
 	interpolatePosition(pos2,pos3,timeOfExecution,loopRate)
 	interpolatePosition(pos3,pos1,timeOfExecution,loopRate)
+
+	while not rospy.is_shutdown():
+		pathPublisher.publish(pathMsg)
+		

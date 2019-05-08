@@ -6,6 +6,8 @@ from std_msgs.msg import *
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import JointState
 from bombel_msgs.msg import BombelState
+from nav_msgs.msg import Path
+
 
 import tf
 from math import *
@@ -23,6 +25,14 @@ a3=0
 a4=0
 theta3=0
 
+pathMsg = Path()
+
+
+def path_real_reset(data):
+	global pathMsg
+
+	pathMsg.poses = []
+
 def msg_received(data):
 	global posePublisher, robotStatePublisher, d1, a2, a3, a4, theta3, seq
 
@@ -39,6 +49,11 @@ def msg_received(data):
 
 	poseMsg.header.frame_id="base_link"
 	poseMsg.header.stamp=rospy.Time.now()
+	poseMsg.header.seq = seq
+
+	pathMsg.header = poseMsg.header
+	jointMsg.header = poseMsg.header
+	seq += 1
 
 	const_xy=a2*sin(theta1)+a3*sin(theta1+theta2)+a4*sin(theta1+theta2+pi/4)
 	poseMsg.pose.position.x=cos(theta0)*const_xy
@@ -51,16 +66,15 @@ def msg_received(data):
 	poseMsg.pose.orientation.z=quaternion[2]
 	poseMsg.pose.orientation.w=quaternion[3]
 
-	jointMsg.header.seq = seq
-	seq += 1
-	jointMsg.header.stamp = rospy.Time().now()
+	pathMsg.poses.append(poseMsg)
 
 	jointMsg.name = ['joint0', 'joint1', 'joint2']
 	jointMsg.position= [theta0, theta1, theta2]
 
 
-	# posePublisher.publish(poseMsg)
+	posePublisher.publish(poseMsg)
 	robotStatePublisher.publish(jointMsg)
+	pathPublisher.publish(pathMsg)
 
 
 def get_params():
@@ -100,9 +114,11 @@ if __name__ == '__main__':
 	rospy.init_node('BombelJointStatePublisher', anonymous=True)
 	get_params()
 
-	posePublisher = rospy.Publisher('/bombel_dkin', PoseStamped, queue_size=100)
+	posePublisher = rospy.Publisher('/bombel/pose_real', PoseStamped, queue_size=100)
 	robotStatePublisher = rospy.Publisher('/joint_states', JointState, queue_size=100)
+	pathPublisher = rospy.Publisher('/bombel/path_real', Path, queue_size=100)
 	rospy.Subscriber("/bombel/state", BombelState, msg_received)
+	rospy.Subscriber("/bombel/path_real/reset", Bool, path_real_reset)
 
 	rate = rospy.Rate(10) # 10hz
 

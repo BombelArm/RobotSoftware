@@ -19,3 +19,9 @@ class BombelCmdType():
 	
 	def SetPosition(self):
 		return 5
+
+	def StopWhenError(self):
+		return 6
+
+	def DoNotStopWhenError(self):
+		return 7

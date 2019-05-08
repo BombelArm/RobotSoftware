@@ -4,11 +4,9 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /Global Options1
-        - /Status1
-        - /RobotModel1
         - /RobotModel1/Links1
         - /Path1
+        - /Pose1
       Splitter Ratio: 0.5
     Tree Height: 429
   - Class: rviz/Selection
@@ -107,39 +105,9 @@ Visualization Manager:
       Update Interval: 0
       Value: false
     - Alpha: 1
-      Axes Length: 1
-      Axes Radius: 0.100000001
-      Class: rviz/Pose
-      Color: 170; 255; 0
-      Enabled: true
-      Head Length: 0.0500000007
-      Head Radius: 0.0299999993
-      Name: Pose
-      Shaft Length: 0.100000001
-      Shaft Radius: 0.0199999996
-      Shape: Arrow
-      Topic: /bombel_ikin
-      Unreliable: false
-      Value: true
-    - Alpha: 1
-      Axes Length: 1
-      Axes Radius: 0.100000001
-      Class: rviz/Pose
-      Color: 255; 25; 0
-      Enabled: true
-      Head Length: 0.300000012
-      Head Radius: 0.100000001
-      Name: Pose
-      Shaft Length: 1
-      Shaft Radius: 0.0500000007
-      Shape: Arrow
-      Topic: /generator_poses
-      Unreliable: false
-      Value: true
-    - Alpha: 1
       Buffer Length: 1
       Class: rviz/Path
-      Color: 25; 255; 0
+      Color: 0; 255; 0
       Enabled: true
       Head Diameter: 0.300000012
       Head Length: 0.200000003
@@ -156,22 +124,22 @@ Visualization Manager:
       Radius: 0.0299999993
       Shaft Diameter: 0.100000001
       Shaft Length: 0.100000001
-      Topic: /generator/path
+      Topic: /bombel/path_real
       Unreliable: false
       Value: true
     - Alpha: 1
       Axes Length: 1
       Axes Radius: 0.100000001
       Class: rviz/Pose
-      Color: 221; 255; 0
+      Color: 0; 255; 0
       Enabled: true
-      Head Length: 0.0500000007
-      Head Radius: 0.0199999996
+      Head Length: 0.0299999993
+      Head Radius: 0.0399999991
       Name: Pose
-      Shaft Length: 0.100000001
-      Shaft Radius: 0.00999999978
+      Shaft Length: 0.0500000007
+      Shaft Radius: 0.0199999996
       Shape: Arrow
-      Topic: /generator/pose
+      Topic: /bombel/pose_real
       Unreliable: false
       Value: true
   Enabled: true
@@ -199,7 +167,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.59351945
+      Distance: 2.00842142
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
@@ -214,10 +182,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.555397272
+      Pitch: 0.330397308
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.15357065
+      Yaw: 1.23857057
     Saved: ~
 Window Geometry:
   Displays:
@@ -236,4 +204,4 @@ Window Geometry:
     collapsed: false
   Width: 1216
   X: 704
-  Y: 104
+  Y: 103
