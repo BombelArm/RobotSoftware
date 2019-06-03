@@ -35,9 +35,9 @@
 </link>
 <link name="part4">
 <visual>
-  <origin xyz="0 0 0.07308" rpy="0 0 0"/>
+  <origin xyz="0 0 0.02" rpy="0 0 0"/>
     <geometry>
-      <cylinder length="0.14616" radius="0.015"/>
+      <cylinder length="0.04" radius="0.015"/>
     </geometry>
 </visual>
 </link>

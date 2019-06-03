@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-import copy
+from math import *
 
 from std_msgs.msg import *
 
@@ -11,6 +11,9 @@ from nav_msgs.msg import Path
 from sensor_msgs.msg import JointState
 from bombel_msgs.msg import *
 from bombel_msgs.srv import *
+
+from bombel_msgs import BombelCmdType
+BombelCmdType = BombelCmdType()
 		
 
 ikin_server = None
@@ -18,15 +21,25 @@ dikin_server = None
 
 posePublisher = None
 pathPublisher = None
-bombelPosPub = None
-jointStatePublisher = None
+bombelCmdPub = None
+robotStatePublisher = None
 
-timeOfExecution = 4
+timeOfExecution = 5
 loopRate = 20
 
-pos1 = Point(0.0, 0.0 ,0.0)
-pos2 = Point(0.3, 0.2 ,0.2)
-pos3 = Point(0.3, -0.2 ,0.2)
+pos1 = Point(0.2, 0.1 ,0.4)
+pos2 = Point(0.2, 0.1 ,0.2)
+pos3 = Point(0.2, -0.1 ,0.2)
+pos4 = Point(0.2, -0.1 ,0.4)
+pos5 = Point(0.2, 0.1 ,0.4)
+
+
+pos6 = Point(0.2, -0.1 ,0.3)
+pos7 = Point(0.2, 0.1 ,0.2)
+
+
+
+pathMsg = None
 
 def calculateIkin(point):
     try:
@@ -50,22 +63,26 @@ def calculatePoly(x,ox, ta, t):
   result  = ((-2.0*(x-ox))/(t*t*t))*(ta*ta*ta) + ((3.0*(x-ox))/(t*t))*(ta*ta) + ox; 
   return result 
 
-def interpolate(startPos, endPos, timeOfExecution, loopRate):
+def interpolatePosition(startPos, endPos, timeOfExecution, loopRate):	
+	bombelCmd = BombelCmd()
+
 	poseStampedMsg = PoseStamped()
 	poseStampedMsg.header.frame_id= "base_link"
-	poseStampedMsg.pose.position = copy.deepcopy(startPos)
 
-	jointStateMsg = JointState()
-	jointStateMsg.name = ["joint0", "joint1", "joint2"]
-	jointStateMsg.position = [0.0, 0.0, 0.0]
-
-	pathMsg = Path()
 	pathMsg.header.frame_id = "base_link"
-
 	nextPosition = Point()
 
+	jointMsg = JointState()
+	jointMsg.header.frame_id = "base_link"
+	jointMsg.name = ['joint0', 'joint1', 'joint2']
+
 	timeNow = 0.0
+	seq = 0
 	rate =rospy.Rate(loopRate)
+
+
+	bombelCmd.cmd = BombelCmdType.Start() #start 
+	bombelCmdPub.publish(bombelCmd)
 
 	while(not rospy.is_shutdown()):
 		timestamp = rospy.Time.now()
@@ -90,26 +107,36 @@ def interpolate(startPos, endPos, timeOfExecution, loopRate):
 		pathMsg.poses.append(poseStampedMsg)
 		pathPublisher.publish(pathMsg)
 
-		#sending JointState to Rviz
-		jointStateMsg.header.stamp = timestamp
-		jointStateMsg.position = nextJointState
-		jointStatePublisher.publish(jointStateMsg)
+		#sending robot state
+		jointMsg.header.stamp = timestamp
+		jointMsg.position= nextJointState
+		robotStatePublisher.publish(jointMsg)
 
-		print "Pos: x:{0} y:{1} z:{2}\ttime {3}".format(nextPosition.x, nextPosition.y, nextPosition.z,timeNow)
+		#sending cmd to Bombel
+		# bombelCmd.seq = seq
+		# bombelCmd.cmd = BombelCmdType.SetNextPosition() #setNextPos
+		# bombelCmd.joint0_pos = nextJointState[0]
+		# bombelCmd.joint1_pos = nextJointState[1]
+		# bombelCmd.joint2_pos = nextJointState[2]
+		# bombelCmdPub.publish(bombelCmd)
 
+		seq += 1
 		timeNow = timeNow + 1.0/loopRate
 		if(timeNow >= timeOfExecution):
 			break;
 		rate.sleep()
 
-	print "Interpolation from {0} to {1} ended.".format(startPos,endPos)
+	#stopping bombel
+	bombelCmd.cmd = 0
+	bombelCmdPub.publish(bombelCmd)
+
 
 if __name__ == '__main__':
 	rospy.init_node('generator', anonymous=True)
 	posePublisher = rospy.Publisher('/generator/pose', PoseStamped, queue_size=10)
 	pathPublisher = rospy.Publisher('/generator/path',Path, queue_size=10)
-	bombelPosPub = rospy.Publisher('/bombel/pos',BombelPos, queue_size=10)
-	jointStatePublisher = rospy.Publisher('joint_states', JointState, queue_size=10)
+	bombelCmdPub = rospy.Publisher('/bombel/cmd',BombelCmd, queue_size=10)
+	robotStatePublisher = rospy.Publisher('/joint_states', JointState, queue_size=100)
 	
 	rospy.wait_for_service('bombel/ikin_server')
 	rospy.wait_for_service('bombel/dikin_server')
@@ -118,15 +145,26 @@ if __name__ == '__main__':
 	rate = rospy.Rate(loopRate)
 
 	#setting up messages
-	pos1 = calculateDkin([0.0, 0.0, 0.0]);
+	pos0 = calculateDkin([0.0, 0.0, 0.0]);
 
 	poseStampedMsg = PoseStamped()
+	pathMsg = Path()
+	
+	rospy.loginfo("Hardware generator ready!")
+	# base(timeOfExecution*2,loopRate)
 
-    
-	# currentPosition = copy.deepcopy(startPos)
+	interpolatePosition(pos0,pos1,timeOfExecution,loopRate)
+	sleep(2)
+	interpolatePosition(pos1,pos2,timeOfExecution,loopRate)
+	interpolatePosition(pos2,pos3,timeOfExecution,loopRate)
+	interpolatePosition(pos3,pos4,timeOfExecution,loopRate)
+	interpolatePosition(pos4,pos5,timeOfExecution,loopRate)
+	interpolatePosition(pos5,pos1,timeOfExecution,loopRate)
 
-	rospy.loginfo("[Ikin_Client] Init OK!")
 
-	interpolate(pos1,pos2,timeOfExecution,loopRate)
-	interpolate(pos2,pos3,timeOfExecution,loopRate)
-	interpolate(pos3,pos1,timeOfExecution,loopRate)
+	interpolatePosition(pos1,pos6,timeOfExecution,loopRate)
+	interpolatePosition(pos6,pos7,timeOfExecution,loopRate)
+	interpolatePosition(pos7,pos1,timeOfExecution,loopRate)
+
+	rospy.spin()
+		

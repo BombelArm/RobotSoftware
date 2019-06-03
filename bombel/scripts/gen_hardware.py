@@ -26,9 +26,20 @@ bombelCmdPub = None
 timeOfExecution = 15
 loopRate = 20
 
-pos1 = Point(0.0, 0.0 ,0.0)
-pos2 = Point(0.3, 0.2 ,0.2)
-pos3 = Point(0.3, -0.2 ,0.2)
+# pos1 = Point(0.0, 0.0 ,0.0)
+# pos2 = Point(0.3, 0.2 ,0.2)
+# pos3 = Point(0.3, -0.2 ,0.2)
+
+
+pos1 = Point(0.25, 0.1 ,0.4)
+pos2 = Point(0.25, 0.1 ,0.2)
+pos3 = Point(0.25, -0.1 ,0.2)
+pos4 = Point(0.25, -0.1 ,0.4)
+pos5 = Point(0.25, 0.1 ,0.4)
+
+
+pos6 = Point(0.25, -0.1 ,0.3)
+pos7 = Point(0.25, 0.1 ,0.2)
 
 
 pathMsg = Path()
@@ -114,7 +125,7 @@ def interpolatePosition(startPos, endPos, timeOfExecution, loopRate):
 		rate.sleep()
 
 	#stopping bombel
-	bombelCmd.cmd = 0
+	bombelCmd.cmd = BombelCmdType.HardStop()
 	bombelCmdPub.publish(bombelCmd)
 	print "Interpolation from {0} to {1} ended.".format(startPos,endPos)
 
@@ -132,17 +143,32 @@ if __name__ == '__main__':
 	rate = rospy.Rate(loopRate)
 
 	#setting up messages
-	pos1 = calculateDkin([0.0, 0.0, 0.0]);
+	pos0 = calculateDkin([0.0, 0.0, 0.0]);
 
 	poseStampedMsg = PoseStamped()
 	
 	rospy.loginfo("Hardware generator ready!")
 	# base(timeOfExecution*2,loopRate)
 	
+	# interpolatePosition(pos1,pos2,timeOfExecution,loopRate)
+	# interpolatePosition(pos2,pos3,timeOfExecution,loopRate)
+	# interpolatePosition(pos3,pos1,timeOfExecution,loopRate)
+
+
+	interpolatePosition(pos0,pos1,timeOfExecution,loopRate)
+	rospy.sleep(2.)
 	interpolatePosition(pos1,pos2,timeOfExecution,loopRate)
 	interpolatePosition(pos2,pos3,timeOfExecution,loopRate)
-	interpolatePosition(pos3,pos1,timeOfExecution,loopRate)
+	interpolatePosition(pos3,pos4,timeOfExecution,loopRate)
+	interpolatePosition(pos4,pos5,timeOfExecution,loopRate)
+	interpolatePosition(pos5,pos1,timeOfExecution,loopRate)
 
-	while not rospy.is_shutdown():
-		pathPublisher.publish(pathMsg)
+	rospy.sleep(2.)
+
+	interpolatePosition(pos1,pos6,timeOfExecution,loopRate)
+	interpolatePosition(pos6,pos7,timeOfExecution,loopRate)
+	interpolatePosition(pos7,pos1,timeOfExecution,loopRate)
+
+	# while not rospy.is_shutdown():
+	# 	pathPublisher.publish(pathMsg)
 		

@@ -3,19 +3,20 @@
   <param name="robot_description" command="$(find xacro)/xacro.py $(find bombel)/urdf/simple.urdf" />
   <param name="use_gui" value="true"/>
 
+
   <param name="d1" value="0.2005" />
   <param name="a2" value="0.1575" />
   <param name="a3" value="0.18334" />
-  <param name="a4" value="0.14616" />
+  <param name="a4" value="0.04" />
   <param name="theta3" value="0.78539816339" />
 
 
   <param name="theta0_upper" value="3.14" />
   <param name="theta0_lower" value="-3.14" />
-  <param name="theta1_upper" value="1.57" />
-  <param name="theta1_lower" value="-1.57" />
-  <param name="theta2_upper" value="2" />
-  <param name="theta3_lower" value="-2" />
+  <param name="theta1_upper" value="3.14" />
+  <param name="theta1_lower" value="-3.14" />
+  <param name="theta2_upper" value="3.14" />
+  <param name="theta2_lower" value="-3.14" />
 
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
   <node name="DIKIN_SERVER" pkg="bombel" type="dkin_server.py" output="screen"/>
